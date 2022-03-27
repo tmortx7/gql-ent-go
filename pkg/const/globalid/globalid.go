@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"github.com/tmortx7/gql-ent-go/ent/user"
 
-	)
+	"github.com/tmortx7/gql-ent-go/ent/user"
+)
 
 type field struct {
 	Prefix string
