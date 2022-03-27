@@ -6,5 +6,5 @@ database:
   name: data
   ssl: disable
 
-Server:
+server:
   port: 8080

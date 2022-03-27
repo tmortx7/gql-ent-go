@@ -19,7 +19,7 @@ type config struct {
 		Name     string
 		SSL      string
 	}
-	HttpServer struct {
+	Server struct {
 		Port string
 	}
 }
