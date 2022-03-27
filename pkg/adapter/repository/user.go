@@ -8,7 +8,7 @@ import (
 	"github.com/tmortx7/gql-ent-go/ent"
 	"github.com/tmortx7/gql-ent-go/ent/user"
 	"github.com/tmortx7/gql-ent-go/pkg/entity/model"
-	usecaseRepository "github.com/tmortx7/gql-ent-go/pkg/usercase/repository"
+	usecaseRepository "github.com/tmortx7/gql-ent-go/pkg/usecase/repository"
 )
 
 type userRepository struct {
