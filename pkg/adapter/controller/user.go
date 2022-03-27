@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/tmortx7/gql-ent-go/pkg/entity/model"
-	"github.com/tmortx7/gql-ent-go/pkg/usercase/usecase"
+	"github.com/tmortx7/gql-ent-go/pkg/usecase/usecase"
 )
 
 type user struct {

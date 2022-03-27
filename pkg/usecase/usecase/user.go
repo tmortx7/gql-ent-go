@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/tmortx7/gql-ent-go/pkg/entity/model"
-	"github.com/tmortx7/gql-ent-go/pkg/usercase/repository"
+	"github.com/tmortx7/gql-ent-go/pkg/usecase/repository"
 )
 
 type user struct {

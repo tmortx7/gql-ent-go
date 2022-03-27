@@ -1,0 +1,68 @@
+"""
+Represents a user which is able to login to the application
+"""
+type Pet implements Node {
+
+  id: ID!
+
+  """
+  name of the pet
+  """
+  name: String!
+
+
+  """
+  RFC3339 conform timestamp of the object creation date.
+  """
+  createdAt: String!
+
+  """
+  RFC3339 conform timestamp of the last update of the object.
+  """
+  updatedAt: String!
+}
+
+type PetConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [PetEdge]
+}
+
+type PetEdge {
+  node: Pet
+  cursor: Cursor!
+}
+
+extend type Query {
+  pet(id: ID): Pet
+  pets(after: Cursor, first: Int, before: Cursor, last: Int, where: PetWhereInput): PetConnection
+}
+
+"""
+Input to create a new pet
+"""
+input CreatePetInput {
+  """
+  name of the pet. Should not be longer than 255 characters
+  """
+  name: String! @binding(constraint: "required,max=255")
+
+}
+
+"""
+Input used to update a existing pet
+"""
+input UpdatePetInput {
+
+  id: ID! @binding(constraint: "required")
+  """
+  New name of the pet
+  """
+  name: String! @binding(constraint: "required,max=255")
+
+}
+
+extend type Mutation {
+  createPet(input: CreatePetInput!): Pet!
+  updatePet(input: UpdatePetInput!): Pet!
+}
