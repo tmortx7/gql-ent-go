@@ -9,6 +9,7 @@ import (
 	"github.com/tmortx7/gql-ent-go/ent/user"
 	"github.com/tmortx7/gql-ent-go/pkg/entity/model"
 	usecaseRepository "github.com/tmortx7/gql-ent-go/pkg/usecase/repository"
+	util "github.com/tmortx7/gql-ent-go/pkg/util/password"
 )
 
 type userRepository struct {
@@ -32,7 +33,14 @@ func (r *userRepository) List(ctx context.Context, after *model.Cursor, first *i
 }
 
 func (r *userRepository) Create(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
-	u, err := r.client.User.Create().SetInput(input).Save(ctx)
+	hashedpassword, _:= util.HashPassword(input.Password)
+	u, err := r.client.User.Create().
+		SetFirstName(input.FirstName).
+		SetLastName(input.LastName).
+		SetEmail(input.Email).
+		SetRole(*input.Role).
+		SetPassword(hashedpassword).
+		Save(ctx)
 	if err != nil {
 		return nil, errors.New("failed to create user")
 	}
