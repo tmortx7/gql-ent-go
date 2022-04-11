@@ -9,23 +9,40 @@ import (
 	"github.com/tmortx7/gql-ent-go/ent"
 	"github.com/tmortx7/gql-ent-go/ent/schema/ulid"
 	"github.com/tmortx7/gql-ent-go/graph/generated"
+	"github.com/tmortx7/gql-ent-go/pkg/adapter/handler"
 	"github.com/tmortx7/gql-ent-go/pkg/util/datetime"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
-	return r.controller.User.Create(ctx, input)
+	u, err := r.controller.User.Create(ctx, input)
+	if err != nil {
+		return nil, handler.HandleError(ctx, err)
+	}
+	return u, nil
 }
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, input ent.UpdateUserInput) (*ent.User, error) {
-	return r.controller.User.Update(ctx, input)
+	u, err := r.controller.User.Update(ctx, input)
+	if err != nil {
+		return nil, handler.HandleError(ctx, err)
+	}
+	return u, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id *ulid.ID) (*ent.User, error) {
-	return r.controller.User.Get(ctx, id)
+	u, err := r.controller.User.Get(ctx, id)
+	if err != nil {
+		return nil, handler.HandleError(ctx, err)
+	}
+	return u, nil
 }
 
 func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.UserWhereInput) (*ent.UserConnection, error) {
-	return r.controller.User.List(ctx, after, first, before, last, where)
+	us, err := r.controller.User.List(ctx, after, first, before, last, where)
+	if err != nil {
+		return nil, handler.HandleError(ctx, err)
+	}
+	return us, nil
 }
 
 func (r *userResolver) CreatedAt(ctx context.Context, obj *ent.User) (string, error) {

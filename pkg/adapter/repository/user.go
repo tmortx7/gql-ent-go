@@ -42,7 +42,7 @@ func (r *userRepository) Create(ctx context.Context, input model.CreateUserInput
 		SetPassword(hashedpassword).
 		Save(ctx)
 	if err != nil {
-		return nil, errors.New("failed to create user")
+		return nil, model.NewDBError(err)
 	}
 	return u, nil
 }
@@ -50,7 +50,7 @@ func (r *userRepository) Create(ctx context.Context, input model.CreateUserInput
 func (r *userRepository) Update(ctx context.Context, input model.UpdateUserInput) (*model.User, error) {
 	u, err := r.client.User.UpdateOneID(input.ID).SetInput(input).SetUpdatedAt(time.Now()).Save(ctx)
 	if err != nil {
-		return nil, errors.New("failed to update user")
+		return nil, model.NewDBError(err)
 	}
 	return u, nil
 }
