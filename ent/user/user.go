@@ -3,6 +3,9 @@
 package user
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/tmortx7/gql-ent-go/ent/schema/ulid"
@@ -13,6 +16,8 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
 	// FieldFirstName holds the string denoting the first_name field in the database.
 	FieldFirstName = "first_name"
 	// FieldLastName holds the string denoting the last_name field in the database.
@@ -32,6 +37,7 @@ const (
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldRole,
 	FieldFirstName,
 	FieldLastName,
 	FieldEmail,
@@ -64,3 +70,47 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() ulid.ID
 )
+
+// Role defines the type for the "role" enum field.
+type Role string
+
+// RoleClient is the default value of the Role enum.
+const DefaultRole = RoleClient
+
+// Role values.
+const (
+	RoleClient Role = "CLIENT"
+	RoleAdmin  Role = "ADMIN"
+)
+
+func (r Role) String() string {
+	return string(r)
+}
+
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r Role) error {
+	switch r {
+	case RoleClient, RoleAdmin:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for role field: %q", r)
+	}
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (r Role) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(r.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (r *Role) UnmarshalGQL(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("enum %T must be a string", val)
+	}
+	*r = Role(str)
+	if err := RoleValidator(*r); err != nil {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}

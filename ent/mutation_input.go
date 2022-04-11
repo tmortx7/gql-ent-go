@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/tmortx7/gql-ent-go/ent/schema/ulid"
+	"github.com/tmortx7/gql-ent-go/ent/user"
 )
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
+	Role      *user.Role
 	FirstName string
 	LastName  string
 	Email     string
@@ -20,6 +22,9 @@ type CreateUserInput struct {
 
 // Mutate applies the CreateUserInput on the UserCreate builder.
 func (i *CreateUserInput) Mutate(m *UserCreate) {
+	if v := i.Role; v != nil {
+		m.SetRole(*v)
+	}
 	m.SetFirstName(i.FirstName)
 	m.SetLastName(i.LastName)
 	m.SetEmail(i.Email)
@@ -41,6 +46,7 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
 	ID        ulid.ID
+	Role      *user.Role
 	FirstName *string
 	LastName  *string
 	Email     *string
@@ -50,6 +56,9 @@ type UpdateUserInput struct {
 
 // Mutate applies the UpdateUserInput on the UserMutation.
 func (i *UpdateUserInput) Mutate(m *UserMutation) {
+	if v := i.Role; v != nil {
+		m.SetRole(*v)
+	}
 	if v := i.FirstName; v != nil {
 		m.SetFirstName(*v)
 	}

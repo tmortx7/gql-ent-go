@@ -7,6 +7,12 @@ input UserWhereInput {
   and: [UserWhereInput!]
   or: [UserWhereInput!]
   
+  """role field predicates"""
+  role: UserRole
+  roleNEQ: UserRole
+  roleIn: [UserRole!]
+  roleNotIn: [UserRole!]
+  
   """first_name field predicates"""
   firstName: String
   firstNameNEQ: String

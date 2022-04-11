@@ -11,6 +11,7 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"CLIENT", "ADMIN"}, Default: "CLIENT"},
 		{Name: "first_name", Type: field.TypeString},
 		{Name: "last_name", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Unique: true},

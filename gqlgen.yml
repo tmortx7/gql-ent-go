@@ -55,3 +55,6 @@ models:
   Node:
     model:
       - github.com/tmortx7/gql-ent-go/pkg/entity/model.Node
+  UserRole:
+    model:
+      - github.com/tmortx7/gql-ent-go/ent/user.Role

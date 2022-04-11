@@ -27,6 +27,12 @@ type UserWhereInput struct {
 	IDLT    *ulid.ID  `json:"idLT,omitempty"`
 	IDLTE   *ulid.ID  `json:"idLTE,omitempty"`
 
+	// "role" field predicates.
+	Role      *user.Role  `json:"role,omitempty"`
+	RoleNEQ   *user.Role  `json:"roleNEQ,omitempty"`
+	RoleIn    []user.Role `json:"roleIn,omitempty"`
+	RoleNotIn []user.Role `json:"roleNotIn,omitempty"`
+
 	// "first_name" field predicates.
 	FirstName             *string  `json:"firstName,omitempty"`
 	FirstNameNEQ          *string  `json:"firstNameNEQ,omitempty"`
@@ -190,6 +196,18 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 	}
 	if i.IDLTE != nil {
 		predicates = append(predicates, user.IDLTE(*i.IDLTE))
+	}
+	if i.Role != nil {
+		predicates = append(predicates, user.RoleEQ(*i.Role))
+	}
+	if i.RoleNEQ != nil {
+		predicates = append(predicates, user.RoleNEQ(*i.RoleNEQ))
+	}
+	if len(i.RoleIn) > 0 {
+		predicates = append(predicates, user.RoleIn(i.RoleIn...))
+	}
+	if len(i.RoleNotIn) > 0 {
+		predicates = append(predicates, user.RoleNotIn(i.RoleNotIn...))
 	}
 	if i.FirstName != nil {
 		predicates = append(predicates, user.FirstNameEQ(*i.FirstName))

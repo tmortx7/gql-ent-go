@@ -1,7 +1,12 @@
-
+directive @hasRole(role: UserRole!) on FIELD_DEFINITION
+enum UserRole {
+  CLIENT
+  ADMIN
+}
 type User implements Node {
 
   id: ID!
+  role: UserRole!
   firstName: String!
   lastName: String!
   email: String!
@@ -29,6 +34,7 @@ extend type Query {
 input CreateUserInput {
   firstName: String! @binding(constraint: "required,max=255")
   lastName: String! @binding(constraint: "required,max=255")
+  role: UserRole = CLIENT
   email: String! @binding(constraint: "required,email")
   password: String! @binding(constraint: "required,min=8,max=255")
 }
@@ -36,6 +42,7 @@ input CreateUserInput {
 
 input UpdateUserInput {
   id: ID! @binding(constraint: "required")
+  role: UserRole
   firstName: String! @binding(constraint: "required,max=255")
   lastName: String! @binding(constraint: "required,max=255")
   email: String! @binding(constraint: "required,email")

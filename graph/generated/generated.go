@@ -16,6 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/tmortx7/gql-ent-go/ent"
 	"github.com/tmortx7/gql-ent-go/ent/schema/ulid"
+	"github.com/tmortx7/gql-ent-go/ent/user"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -45,6 +46,7 @@ type ResolverRoot interface {
 
 type DirectiveRoot struct {
 	Binding func(ctx context.Context, obj interface{}, next graphql.Resolver, constraint string) (res interface{}, err error)
+	HasRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role user.Role) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -72,6 +74,7 @@ type ComplexityRoot struct {
 		FirstName func(childComplexity int) int
 		ID        func(childComplexity int) int
 		LastName  func(childComplexity int) int
+		Role      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -239,6 +242,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.role":
+		if e.complexity.User.Role == nil {
+			break
+		}
+
+		return e.complexity.User.Role(childComplexity), true
+
 	case "User.updatedAt":
 		if e.complexity.User.UpdatedAt == nil {
 			break
@@ -353,7 +363,9 @@ input UserWhereInput {
   not: UserWhereInput
   and: [UserWhereInput!]
   or: [UserWhereInput!]
-  
+
+ 
+
   """first_name field predicates"""
   firstName: String
   firstNameNEQ: String
@@ -368,7 +380,7 @@ input UserWhereInput {
   firstNameHasSuffix: String
   firstNameEqualFold: String
   firstNameContainsFold: String
-  
+
   """last_name field predicates"""
   lastName: String
   lastNameNEQ: String
@@ -383,7 +395,7 @@ input UserWhereInput {
   lastNameHasSuffix: String
   lastNameEqualFold: String
   lastNameContainsFold: String
-  
+
   """email field predicates"""
   email: String
   emailNEQ: String
@@ -398,7 +410,7 @@ input UserWhereInput {
   emailHasSuffix: String
   emailEqualFold: String
   emailContainsFold: String
-  
+
   """password field predicates"""
   password: String
   passwordNEQ: String
@@ -413,7 +425,7 @@ input UserWhereInput {
   passwordHasSuffix: String
   passwordEqualFold: String
   passwordContainsFold: String
-  
+
   """created_at field predicates"""
   createdAt: Time
   createdAtNEQ: Time
@@ -423,7 +435,7 @@ input UserWhereInput {
   createdAtGTE: Time
   createdAtLT: Time
   createdAtLTE: Time
-  
+
   """updated_at field predicates"""
   updatedAt: Time
   updatedAtNEQ: Time
@@ -433,7 +445,7 @@ input UserWhereInput {
   updatedAtGTE: Time
   updatedAtLT: Time
   updatedAtLTE: Time
-  
+
   """id field predicates"""
   id: ID
   idNEQ: ID
@@ -467,39 +479,19 @@ type Query {
 }
 
 type Mutation`, BuiltIn: false},
-	{Name: "graph/user.graphqls", Input: `"""
-Represents a user which is able to login to the application
-"""
+	{Name: "graph/user.graphqls", Input: `directive @hasRole(role: UserRole!) on FIELD_DEFINITION
+enum UserRole {
+  CLIENT
+  ADMIN
+}
 type User implements Node {
-  """
-  Unique identifier of the user
-  Prefix: usr
-  """
+
   id: ID!
-
-  """
-  First name of the user
-  """
+  role: UserRole!
   firstName: String!
-
-  """
-  Surname of the user
-  """
   lastName: String!
-
-  """
-  Email of the user. Used for login and notifications
-  """
   email: String!
-
-  """
-  RFC3339 conform timestamp of the object creation date.
-  """
   createdAt: String!
-
-  """
-  RFC3339 conform timestamp of the last update of the object.
-  """
   updatedAt: String!
 }
 
@@ -519,49 +511,21 @@ extend type Query {
   users(after: Cursor, first: Int, before: Cursor, last: Int, where: UserWhereInput): UserConnection
 }
 
-"""
-Input to create a new user
-"""
+
 input CreateUserInput {
-  """
-  First name of the user. Should not be longer than 255 characters
-  """
   firstName: String! @binding(constraint: "required,max=255")
-  """
-  Surname of the user. Should not be longer than 255 characters
-  """
   lastName: String! @binding(constraint: "required,max=255")
-  """
-  Email address of the user used for login and notifications
-  Should be a valid email address
-  """
+  role: UserRole = CLIENT
   email: String! @binding(constraint: "required,email")
-  """
-  Password of the user used for login
-  """
   password: String! @binding(constraint: "required,min=8,max=255")
 }
 
-"""
-Input used to update a existing user
-"""
+
 input UpdateUserInput {
-  """
-  Unique identifier of the user to update.
-  Should start with usr_
-  """
   id: ID! @binding(constraint: "required")
-  """
-  New first name of the user
-  """
+  role: UserRole
   firstName: String! @binding(constraint: "required,max=255")
-  """
-  New surename of the user
-  """
   lastName: String! @binding(constraint: "required,max=255")
-  """
-  New email address of the user
-  """
   email: String! @binding(constraint: "required,email")
 }
 
@@ -589,6 +553,21 @@ func (ec *executionContext) dir_binding_args(ctx context.Context, rawArgs map[st
 		}
 	}
 	args["constraint"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 user.Role
+	if tmp, ok := rawArgs["role"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+		arg0, err = ec.unmarshalNUserRole2githubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role"] = arg0
 	return args, nil
 }
 
@@ -1195,6 +1174,41 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	res := resTmp.(ulid.ID)
 	fc.Result = res
 	return ec.marshalNID2githubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋschemaᚋulidᚐID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_role(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Role, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(user.Role)
+	fc.Result = res
+	return ec.marshalNUserRole2githubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_firstName(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
@@ -2734,6 +2748,10 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
+	if _, present := asMap["role"]; !present {
+		asMap["role"] = "CLIENT"
+	}
+
 	for k, v := range asMap {
 		switch k {
 		case "firstName":
@@ -2787,6 +2805,14 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 			} else {
 				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
 				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		case "role":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+			it.Role, err = ec.unmarshalOUserRole2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx, v)
+			if err != nil {
+				return it, err
 			}
 		case "email":
 			var err error
@@ -2882,6 +2908,14 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 			} else {
 				err := fmt.Errorf(`unexpected type %T from directive, should be github.com/tmortx7/gql-ent-go/ent/schema/ulid.ID`, tmp)
 				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		case "role":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+			it.Role, err = ec.unmarshalOUserRole2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx, v)
+			if err != nil {
+				return it, err
 			}
 		case "firstName":
 			var err error
@@ -3871,6 +3905,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "role":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._User_role(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "firstName":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._User_firstName(ctx, field, obj)
@@ -4590,6 +4634,16 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑent�
 	return ec._User(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNUserRole2githubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx context.Context, v interface{}) (user.Role, error) {
+	var res user.Role
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserRole2githubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx context.Context, sel ast.SelectionSet, v user.Role) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNUserWhereInput2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚐUserWhereInput(ctx context.Context, v interface{}) (*ent.UserWhereInput, error) {
 	res, err := ec.unmarshalInputUserWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -5135,6 +5189,22 @@ func (ec *executionContext) marshalOUserEdge2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑe
 		return graphql.Null
 	}
 	return ec._UserEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOUserRole2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx context.Context, v interface{}) (*user.Role, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(user.Role)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUserRole2ᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚋuserᚐRole(ctx context.Context, sel ast.SelectionSet, v *user.Role) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋtmortx7ᚋgqlᚑentᚑgoᚋentᚐUserWhereInputᚄ(ctx context.Context, v interface{}) ([]*ent.UserWhereInput, error) {

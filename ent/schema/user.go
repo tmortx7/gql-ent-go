@@ -17,6 +17,12 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
+		field.Enum("role").
+			NamedValues(
+				"Client", "CLIENT",
+				"Admin", "ADMIN",
+			).
+			Default("CLIENT"),
 		field.String("id").
 			GoType(ulid.ID("")).
 			DefaultFunc(func() ulid.ID {
